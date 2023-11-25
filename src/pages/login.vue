@@ -2,6 +2,7 @@
 	import { ref } from "vue";
 	import { IUser } from "./admin.vue";
 	import axios from "axios";
+	import { FwbButton } from "flowbite-vue";
 
 	const brokerID = ref<number>(1);
 
@@ -20,7 +21,37 @@
 </script>
 
 <template>
-	<h1>Вход</h1>
-	<input type="number" placeholder="Your ID" v-model="brokerID" />
-	<button @click="login()">Login</button>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;500;700&family=Ubuntu&family=Ubuntu+Mono&display=swap" rel="stylesheet">
+
+	<div class="login-box">
+		<h1>Вход</h1>
+		<input type="number" placeholder="Your ID" v-model="brokerID" />
+		<fwb-button color="purple" outline @click="login()">Login</fwb-button>
+	</div>
 </template>
+
+<style>
+	* {
+		font-family: 'Ubuntu Mono', sans-serif;
+	}
+
+	.login-box {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-direction: column;
+
+		padding-top: 10px;
+	}
+
+	input {
+		margin-bottom: 10px;
+	}
+
+	h1 {
+		margin-bottom: 15px;
+	}
+
+</style>

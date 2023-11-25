@@ -2,48 +2,20 @@
 	import { ref, watch } from "vue";
 	import axios from "axios";
 
-	export interface IUser {
-		id: number;
-		name: string;
-		balance: number;
-		stocks: {
-			id: number;
-			prices: {
-				date: string;
-				price: number;
-			}[];
-
-			profit?: number;
-		}[];
-	}
-
-	export interface IStocks {
-		id: number;
-		label: string;
-		name: string;
-		price: number;
-	}
-
-	export interface IBuyStock {
-		brokerId: number;
-		stockId: number;
-		date?: string;
-		price: number;
-		count: number;
-	}
+	import { IStock, IBuyStock, IBroker } from "../interfaces/interfaces";
 
 	export interface ISellStock extends IBuyStock {}
 
-	const users = ref<IUser[]>([]);
-	const stocks = ref<IStocks[] | null>([]);
+	const users = ref<IBroker[]>([]);
+	const stocks = ref<IStock[] | null>([]);
 	const timer = ref<any>(1);
 
 	watch(
 		() => timer.value,
 		async () => {
-			users.value = (await axios.get<IUser[]>("http://localhost:3001/brokers")).data;
+			users.value = (await axios.get<IBroker[]>("http://localhost:3001/brokers")).data;
 
-			stocks.value = (await axios.get<IStocks[]>("http://localhost:3001/stocks")).data;
+			stocks.value = (await axios.get<IStock[]>("http://localhost:3001/stocks")).data;
 
 			setTimeout(() => {
 				timer.value++;

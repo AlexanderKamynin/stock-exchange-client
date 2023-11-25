@@ -1,37 +1,48 @@
 <script setup lang="ts">
-	import { ref, watchEffect, watch, onMounted } from "vue";
-	// @ts-ignore
+	import { ref, watchEffect, watch } from "vue";
 	import { io } from "socket.io-client";
-	import { IStocks, IUser } from "./admin.vue";
+	import { IStocks, IUser } from "./admin.vue.js";
 	import axios from "axios";
 
 	import { FwbModal, FwbButton } from "flowbite-vue";
 
-	import { formatCurrency } from "../utils/format";
-
 	// @ts-ignore
 	import { Chart, registerables } from "chart.js";
-	import { config } from "../components/constants";
+	const GraphicConfig = {
+	type: "line",
+	data: {
+		labels: [0],
+		datasets: [
+			{
+				data: [0],
+				fill: false,
+				label: "Цена акции",
+				borderColor: "rgb(75, 192, 192)",
+			},
+		],
+	},
+};
 
-	const canvasRef = ref<HTMLCanvasElement | undefined>();
-	const chartRef = ref<Chart>(null);
+	Chart.register(...registerables);
+	const canvasElement = ref<HTMLCanvasElement>();
+	const graphic = ref<Chart>(null);
 
-	watch(
-		() => canvasRef.value,
-		() => {
-			if (canvasRef.value) {
-				const ctx = canvasRef.value.getContext("2d");
-				if (ctx) {
-					Chart.register(...registerables);
-
-					chartRef.current = new Chart(ctx, config);
+	watch
+	(
+		() => canvasElement.value,
+		function callback() 
+		{
+			if (canvasElement.value) {
+				const canvasContext = canvasElement.value.getContext("2d");
+				if (canvasContext) {
+					graphic.current = new Chart(canvasContext, GraphicConfig);
 				}
 			}
 		}
 	);
 
 	function pushDot(value: number) {
-		const chart = chartRef.current;
+		const chart = graphic.current;
 		if (!chart) return;
 		// add new dot to chart
 		chart.data.datasets[0].data.push(value);
@@ -125,33 +136,32 @@
 
 <template>
 	<section class="cards">
-		<p>Привет, {{ name }}, У вас (нихукя себе) {{ formatCurrency(balance) }}</p>
+		<p>Добрый день, {{ name }}! На вашем счету {{ balance }}</p>
 
 		<template v-for="stock in stocks" :key="stock.id">
 			<div class="card">
 				<h1 class="card__title">{{ stock.label }} x {{ counts[stock.id] || 0 }} ({{ stock.id }})</h1>
-				<p>{{ formatCurrency(stock.price) }}</p>
+				<p>{{ stock.price }}</p>
 				<div class="buttons">
-					<fwb-button @click="buyStock(stock)">Buy</fwb-button>
-					<fwb-button @click="sellStock(stock)">Sell</fwb-button>
+					<fwb-button color="purple" outline @click="buyStock(stock)">Buy</fwb-button>
+					<fwb-button color="purple" outline @click="sellStock(stock)">Sell</fwb-button>
 					<input type="number" placeholder="count" v-model="amount" />
-					<fwb-button @click="showModal"> Open modal </fwb-button>
+					<fwb-button color="purple" outline @click="showModal"> Open modal </fwb-button>
 				</div>
 			</div>
 		</template>
 	</section>
 	<fwb-modal v-if="isShowModal" @close="closeModal">
-		<template #header> <h1>График-хуяфик</h1> </template>
+		<template #header> <h1>График</h1> </template>
 		<template #body>
-			<canvas class="graphic" ref="canvasRef"></canvas>
+			<canvas class="graphic" ref="canvasElement"></canvas>
 		</template>
 		<template #footer> </template>
 	</fwb-modal>
 </template>
 
-<style scoped>
-	.buttons {
-		display: flex;
-		gap: 20px;
-	}
+<style>
+button {
+	margin: 10px;
+}
 </style>

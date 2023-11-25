@@ -2,8 +2,6 @@
 	import { ref, watch } from "vue";
 	import axios from "axios";
 
-	import { formatCurrency } from "../utils/format";
-
 	export interface IUser {
 		id: number;
 		name: string;
@@ -69,7 +67,7 @@
 		<div v-for="user in users" :key="user.id" class="card">
 			<div class="card__header">
 				<h1 class="card__title">{{ user.name }} ({{ user.id }})</h1>
-				<p>{{ formatCurrency(user.balance) }}</p>
+				<p>{{ user.balance }}</p>
 			</div>
 			<h2 class="card__stock-title" v-if="user.stocks.reduce((l, a) => l + a.prices.length, 0)">
 				User Stocks:
@@ -79,7 +77,7 @@
 					{{ stocks?.find((el) => el.id === stock.id)?.label }} x {{ stock.prices.length }}
 				</h3>
 				<sup :class="(stock.profit || 0) > 0 ? 'card__green' : 'card__red'">
-					{{ formatCurrency(stock.profit || 0) }}
+					{{ stock.profit || 0) }}
 				</sup>
 			</div>
 		</div>

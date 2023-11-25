@@ -32,7 +32,7 @@
 	</div>
 </template>
 
-<style>
+<style scoped>
 	* {
 		font-family: 'Ubuntu Mono', sans-serif;
 	}

@@ -1,29 +1,27 @@
 <script setup lang="ts">
 	import { ref, watch } from "vue";
 	import axios from "axios";
+	import { FwbCard } from 'flowbite-vue'
 
 	import { IStock, IBuyStock, IBroker } from "../interfaces/interfaces";
 
-	export interface ISellStock extends IBuyStock {}
-
-	const users = ref<IBroker[]>([]);
+	const brokers = ref<IBroker[]>([]);
 	const stocks = ref<IStock[] | null>([]);
 	const timer = ref<any>(1);
 
 	watch(
 		() => timer.value,
 		async () => {
-			users.value = (await axios.get<IBroker[]>("http://localhost:3001/brokers")).data;
-
+			brokers.value = (await axios.get<IBroker[]>("http://localhost:3001/brokers")).data;
 			stocks.value = (await axios.get<IStock[]>("http://localhost:3001/stocks")).data;
 
 			setTimeout(() => {
 				timer.value++;
 			}, 1000);
 
-			users.value.forEach((user) => {
+			brokers.value.forEach((user) => {
 				user.stocks.forEach((stock) => {
-					const actualPrice = stocks.value?.find((s) => s.id === stock.id);
+					const actualPrice = stocks.value?.find((item) => item.id === stock.id);
 
 					stock.profit =
 						stock.prices.length * (actualPrice?.price || 0) -
@@ -34,75 +32,80 @@
 		{ immediate: true }
 	);
 </script>
-<template>
-	<section class="cards">
-		<div v-for="user in users" :key="user.id" class="card">
-			<div class="card__header">
-				<h1 class="card__title">{{ user.name }} ({{ user.id }})</h1>
-				<p>{{ user.balance }}</p>
-			</div>
-			<h2 class="card__stock-title" v-if="user.stocks.reduce((l, a) => l + a.prices.length, 0)">
-				User Stocks:
-			</h2>
-			<div v-for="stock in user.stocks.filter((a) => a.prices.length)" :key="stock.id" class="card__stock">
-				<h3 class="stock__title">
-					{{ stocks?.find((el) => el.id === stock.id)?.label }} x {{ stock.prices.length }}
-				</h3>
-				<sup :class="(stock.profit || 0) > 0 ? 'card__green' : 'card__red'">
-					{{ stock.profit || 0) }}
-				</sup>
-			</div>
+
+<template>	
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;500;700&family=Ubuntu&family=Ubuntu+Mono&display=swap" rel="stylesheet">
+
+		
+		<div class="broker-list">
+		<template v-for="user in brokers" :key="user.id">
+			<fwb-card>
+				<div class="broker-info">
+					<p class="broker-name">Брокер: {{ user.name }}</p>
+					<p class="broker-balance">Баланс: ${{ user.balance.toFixed(3) }}</p>
+				</div>
+
+				<p class="stocks-header" v-if="user.stocks.reduce((num, stocks) => num + stocks.prices.length, 0)">
+					Акции:
+				</p>
+
+				<div class="stock-info" v-for="stock in user.stocks.filter((item) => item.prices.length)" :key="stock.id">
+
+					<p>
+						{{ stocks?.find((item) => item.id === stock.id)?.label }}
+						(Количество: {{ stock.prices.length }})
+					</p>
+
+					<p :class="(stock.profit || 0) > 0 ? 'display-profit': 'display-loss'">
+						<span>{{ (stock.profit || 0) > 0 ? 'Прибыль' : 'Убыль' }}</span>
+						${{ stock.profit?.toFixed(3) || 0 }}
+					</p>
+				</div>
+			</fwb-card>
+		</template>
 		</div>
-	</section>
 </template>
 
 <style>
-	.card {
-		border: 1px solid black;
-		padding: 1rem;
-		border-radius: 5px;
+	* {
+		font-family: 'Ubuntu Mono', sans-serif;
+		font-size: 20px;
 	}
 
-	.card__green {
-		color: green;
-	}
-
-	.card__red {
-		color: red;
-	}
-
-	.card__stock {
+	.broker-list {
 		display: flex;
-		align-items: center;
-		border-radius: 5px;
-		border: 1px solid black;
-		padding: 0.5rem;
+  	justify-content: space-around;
+		gap: 15px;
 	}
 
-	.card__title {
-		margin: 0;
-		font-size: 1.2rem;
-	}
-
-	.card__header {
+	.broker-info {
 		display: flex;
-		justify-content: space-between;
+		justify-content: center;
+		flex-direction: column;
 		align-items: center;
+
+		margin-bottom: 10px;
+		padding: 15px;
 	}
 
-	.stock__title {
-		margin: 0;
-	}
-	.card__stock-title {
-		margin: 0.5rem 0 0.5rem 0;
-		font-size: 1.1rem;
-		font-weight: 300;
+	.stocks-header {
+		text-align: center;
+		font-size: 25px;
 	}
 
-	.cards {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-		gap: 30px;
-		margin: 1rem;
+	.broker-name,
+	.broker-balance {
+		font-size: 30px;
 	}
+
+	.display-profit {
+		color:green;
+	}
+
+	.display-loss {
+		color:red;
+	}
+
 </style>

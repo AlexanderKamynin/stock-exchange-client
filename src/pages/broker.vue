@@ -4,7 +4,7 @@
 	import axios from "axios";
 
 	import { FwbModal, FwbButton } from "flowbite-vue";
-	import { IStock, IBroker } from "../interfaces/interfaces.ts";
+	import { IStock } from "../interfaces/interfaces.ts";
 	import { updateBrokerData, sendRequest } from "../services/broker.service.ts";
 
 	// @ts-ignore
@@ -133,6 +133,21 @@
 			balance.value = JSON.parse(sessionStorage.getItem("broker")).balance;
 		}
 	}
+
+	function calculateProfit(id: number) {
+			let broker = JSON.parse(sessionStorage.getItem("broker"));
+
+			broker.stocks.forEach((stock) => {
+					const actualPrice = stocks.value?.find((item) => item.id === stock.id);
+
+					stock.profit =
+						stock.prices.length * (actualPrice?.price || 0) -
+						stock.prices.reduce((acc, cur) => acc + cur.price, 0);
+				});
+			return broker.stocks.find((item) => item.id === id).profit;
+	};
+
+
 </script>
 
 <template>
@@ -141,7 +156,7 @@
 	<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;500;700&family=Ubuntu&family=Ubuntu+Mono&display=swap" rel="stylesheet">
 
 	<div class="broker-info">
-		<p>Добрый день, {{ name }}! На вашем счету ${{ balance }}</p>
+		<p>Добрый день, {{ name }}! На вашем счету ${{ balance.toFixed(3) }}</p>
 	</div>
 
 	<img src="../img/monkey-with-money.gif">
@@ -152,6 +167,10 @@
 				<div>
 					<p>Количество: {{ counts[stock.id] || 0 }}</p>
 					<p>Текущая цена: ${{ stock.price }}</p>
+					<p :class="(calculateProfit(stock.id) || 0) > 0 ? 'display-profit': 'display-loss'">
+						<span>{{ (calculateProfit(stock.id) || 0) > 0 ? 'Прибыль' : 'Убыль' }}</span>
+						${{ calculateProfit(stock.id).toFixed(3) || 0 }}
+					</p>
 				</div>
 				<div class="buttons">
 					<fwb-button color="purple" outline @click="buyStock(stock)">Buy</fwb-button>
@@ -181,6 +200,14 @@
 		height: 256px;
 		float: left;
 		position: absolute;
+	}
+
+	.display-profit {
+		color:green;
+	}
+
+	.display-loss {
+		color:red;
 	}
 
 	button {

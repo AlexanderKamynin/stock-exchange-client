@@ -52,6 +52,7 @@
 	const balance = ref<number>(JSON.parse(sessionStorage.getItem("broker")).balance ?? 0);
 	const name = ref<string>(JSON.parse(sessionStorage.getItem("broker")).name || "");
 	const counts = ref<any>({});
+	const date = ref<string>('');
 
 	JSON.parse(sessionStorage.getItem("broker") || "{}").stocks.forEach((stock: any) => {
 		counts.value[stock.id] = stock.prices.length;
@@ -77,6 +78,17 @@
 	}
 
 
+	async function setNewDate() {
+    const newDate = (await axios.get('http://localhost:3001/auction/date')).data;
+		if(newDate)
+		{
+			date.value = newDate;
+		}
+		else {
+			date.value = (await axios.get('http://localhost:3001/settings')).data.startDate;
+		}
+  }
+
 	watchEffect(async () => {
 		stocks.value = (await axios.get<IStock[]>("http://localhost:3001/stocks")).data;
 		const newSocket = io("http://localhost:3002", { transports: ["websocket"] });
@@ -86,6 +98,7 @@
 		socket.value?.emit("updatePrices");
 		socket.value?.on("updatePrices", (data: any) => {
 			stocks.value = data;
+			setNewDate();
 			pushDot(data[0].price);
 		});
 	});
@@ -157,6 +170,7 @@
 
 	<div class="broker-info">
 		<p>Добрый день, {{ name }}! На вашем счету ${{ balance.toFixed(3) }}</p>
+		<p>Время биржи: {{ date ? date : "Торги еще не начались!" }}</p>
 	</div>
 
 	<img src="../img/monkey-with-money.gif">

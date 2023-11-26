@@ -178,7 +178,7 @@
 
 					stock.profit =
 						stock.prices.length * (actualPrice?.price || 0) -
-						stock.prices.reduce((acc, cur) => acc + cur.price, 0);
+						stock.prices.reduce((sum, cur) => sum + cur.price, 0);
 				});
 			return broker.stocks.find((item) => item.id === id).profit;
 	};

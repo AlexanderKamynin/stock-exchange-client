@@ -67,14 +67,14 @@
 		isShowModal.value = true;
 	}
 
-	function pushDot(stockId: number, price: number) {
+	function pushDot(stockId: number, price: number, date: string) {
 		const chart = GraphicsConfig[stockId];
 		if (!chart){
 			return;
 		}
 
 		chart.data.datasets[0].data.push(price);
-		chart.data.labels?.push(chart.data.datasets[0].data.length - 1);
+		chart.data.labels?.push(date);
 		if(stockId === currentStockId.value) {
 			graphic.current.update();
 		}
@@ -120,7 +120,7 @@
 							},
 					};
 				}
-				pushDot(stock.id, stock.price)
+				pushDot(stock.id, stock.price, date.value)
 			});
 
 		});

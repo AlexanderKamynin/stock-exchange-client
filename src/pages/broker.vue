@@ -10,38 +10,38 @@
 	// @ts-ignore
 	import { Chart, registerables } from "chart.js";
 
-
-	const GraphicConfig = {
-	type: "line",
-	data: {
-		labels: [0],
-		datasets: [
-			{
-				data: [0],
-				fill: false,
-				label: "Цена акции",
-				borderColor: "rgb(89, 28, 147)",
-			},
-		],
-	},
-};
+	const GraphicsConfig: Record<number, any> = {};
 
 	Chart.register(...registerables);
 	const canvasElement = ref<HTMLCanvasElement>();
 	const graphic = ref<Chart>(null);
+	const currentStockId = ref<number>(0);
+
 	watch
 	(
 		() => canvasElement.value,
-		function callback() 
-		{
-			if (canvasElement.value) {
+		function callback() {
+			if(canvasElement.value) {
 				const canvasContext = canvasElement.value.getContext("2d");
-				if (canvasContext) {
-					graphic.current = new Chart(canvasContext, GraphicConfig);
+				if(canvasContext) {
+					graphic.current = new Chart(canvasContext, GraphicsConfig[currentStockId.value]);
 				}
 			}
 		}
 	);
+
+	watch(
+		() => currentStockId.value, 
+		function callback() {
+			const chartConfig = GraphicsConfig[currentStockId.value];
+			if(chartConfig) {
+				//graphic.current.destroy();
+				const canvasContext = canvasElement.value?.getContext("2d");
+				if (canvasContext) {
+					graphic.current = new Chart(canvasContext, chartConfig);
+				}
+			}
+	});
 
 	const stocks = ref<IStock[]>([]);
 	const socket = ref<any>();
@@ -62,19 +62,22 @@
 		isShowModal.value = false;
 	}
 
-	function showModal() {
+	function showModal(stockID : number) {
+		currentStockId.value = stockID;
 		isShowModal.value = true;
 	}
 
-	function pushDot(value: number) {
-		const chart = graphic.current;
+	function pushDot(stockId: number, price: number) {
+		const chart = GraphicsConfig[stockId];
 		if (!chart){
 			return;
 		}
 
-		chart.data.datasets[0].data.push(value);
+		chart.data.datasets[0].data.push(price);
 		chart.data.labels?.push(chart.data.datasets[0].data.length - 1);
-		chart.update();
+		if(stockId === currentStockId.value) {
+			graphic.current.update();
+		}
 	}
 
 
@@ -96,10 +99,30 @@
 
 		socket.value?.open();
 		socket.value?.emit("updatePrices");
-		socket.value?.on("updatePrices", (data: any) => {
+		socket.value?.on("updatePrices", async (data: any) => {
 			stocks.value = data;
-			setNewDate();
-			pushDot(data[0].price);
+			await setNewDate();
+
+			data.forEach((stock: any) => {
+				if(!GraphicsConfig[stock.id]) {
+					GraphicsConfig[stock.id] = {
+						type: "line",
+						data: {
+							labels: [],
+							datasets: [
+									{
+										data: [],
+										fill: false,
+										label: `Цена акции ${stock.label}`,
+										borderColor: "rgb(89, 28, 147)",
+									},
+								],
+							},
+					};
+				}
+				pushDot(stock.id, stock.price)
+			});
+
 		});
 	});
 
@@ -190,7 +213,7 @@
 					<fwb-button color="purple" outline @click="buyStock(stock)">Buy</fwb-button>
 					<fwb-button color="purple" outline @click="sellStock(stock)">Sell</fwb-button>
 					<input type="number" placeholder="count" v-model="stockCount" />
-					<fwb-button color="purple" outline @click="showModal"> View trand </fwb-button>
+					<fwb-button color="purple" outline @click="showModal(stock.id)"> View trand </fwb-button>
 				</div>
 			</div>
 	</template>
